@@ -153,6 +153,24 @@ def get_user(ldap: str):
     conn.close()
     return dict(row) if row else None
 
+def upsert_user(ldap: str, name: str, role: str, title: str, manager_ldap: str = "malviyarashi", avatar_url: str = None):
+    """Adds or updates a team member in the database."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    avatar = avatar_url or f"https://api.dicebear.com/7.x/bottts/svg?seed={ldap}"
+    cursor.execute("""
+        INSERT INTO users (ldap, name, role, title, manager_ldap, avatar_url)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(ldap) DO UPDATE SET
+            name=excluded.name,
+            role=excluded.role,
+            title=excluded.title,
+            manager_ldap=excluded.manager_ldap,
+            avatar_url=excluded.avatar_url
+    """, (ldap, name, role, title, manager_ldap, avatar))
+    conn.commit()
+    conn.close()
+
 def get_reportees_for_manager(manager_ldap: str):
     conn = get_connection()
     cursor = conn.cursor()

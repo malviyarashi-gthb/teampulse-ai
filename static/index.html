@@ -129,10 +129,16 @@
               <h2 class="text-lg font-semibold text-white">Direct Reports Live Pulse</h2>
               <p class="text-xs text-slate-400">Real-time status, blocker escalations, and sentiment</p>
             </div>
-            <button onclick="refreshManagerData()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
-              <i class="fa-solid fa-arrows-rotate"></i>
-              <span>Refresh</span>
-            </button>
+            <div class="flex items-center gap-2">
+              <button onclick="openAddMemberModal()" class="text-xs text-blue-400 hover:text-white flex items-center gap-1.5 bg-blue-500/10 hover:bg-blue-600 px-3 py-1.5 rounded-lg border border-blue-500/30 transition">
+                <i class="fa-solid fa-user-plus"></i>
+                <span>+ Add Reportee</span>
+              </button>
+              <button onclick="refreshManagerData()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+                <i class="fa-solid fa-arrows-rotate"></i>
+                <span>Refresh</span>
+              </button>
+            </div>
           </div>
 
           <!-- Container for dynamically injected Reportee Cards -->
@@ -651,6 +657,73 @@
       document.getElementById("form-docs").value = "";
       toggleBlockerInput();
       toggle1on1Input();
+    }
+
+  <!-- Add Teammate Modal -->
+  <div id="add-member-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+        <h3 class="text-base font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-user-plus text-blue-400"></i>
+          <span>Add Team Member (Moma LDAP)</span>
+        </h3>
+        <button onclick="closeAddMemberModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+
+      <form id="add-member-form" onsubmit="handleAddMemberSubmit(event)" class="space-y-4 text-xs sm:text-sm">
+        <div>
+          <label class="block font-medium text-slate-300 mb-1">LDAP (Username):</label>
+          <input id="new-member-ldap" type="text" placeholder="e.g. john_doe" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500" required>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-300 mb-1">Full Name:</label>
+          <input id="new-member-name" type="text" placeholder="e.g. John Doe" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500" required>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-300 mb-1">Job Title / Role:</label>
+          <input id="new-member-title" type="text" placeholder="e.g. Software Engineer (Backend)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-blue-500" required>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button type="button" onclick="closeAddMemberModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-xl font-medium">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-semibold">Save to Team</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openAddMemberModal() {
+      document.getElementById("add-member-modal").classList.remove("hidden");
+    }
+
+    function closeAddMemberModal() {
+      document.getElementById("add-member-modal").classList.add("hidden");
+    }
+
+    async function handleAddMemberSubmit(e) {
+      e.preventDefault();
+      const ldap = document.getElementById("new-member-ldap").value.trim();
+      const name = document.getElementById("new-member-name").value.trim();
+      const title = document.getElementById("new-member-title").value.trim();
+
+      if (!ldap || !name) return;
+
+      try {
+        const res = await fetch(`${API_BASE}/api/team/add-member`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ldap, name, title, manager_ldap: currentManager })
+        });
+        const data = await res.json();
+        closeAddMemberModal();
+        document.getElementById("add-member-form").reset();
+        refreshManagerData();
+      } catch (err) {
+        alert("Failed to add member.");
+      }
     }
 
     // Initial Load

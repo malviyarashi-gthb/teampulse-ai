@@ -108,6 +108,19 @@ class TeamPulseHandler(BaseHTTPRequestHandler):
             self._send_json(response)
             return
 
+        elif path == "/api/team/add-member":
+            ldap = data.get("ldap", "").strip()
+            name = data.get("name", "").strip()
+            title = data.get("title", "Software Engineer").strip()
+            role = data.get("role", "reportee").strip()
+            manager_ldap = data.get("manager_ldap", "malviyarashi").strip()
+            if ldap and name:
+                database.upsert_user(ldap, name, role, title, manager_ldap)
+                self._send_json({"success": True, "message": f"Team member {name} added!"})
+            else:
+                self._send_json({"success": False, "error": "LDAP and Name required"}, 400)
+            return
+
         elif path == "/api/sync-moma":
             manager_ldap = data.get("manager_ldap", "malviyarashi")
             reportees = database.get_reportees_for_manager(manager_ldap)
