@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TeamPulse AI - Manager & Team Sync Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-slate-800/80 backdrop-blur border-b border-slate-700 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+          <i class="fa-solid fa-heart-pulse text-white text-xl"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold text-lg text-white">TeamPulse</span>
+            <span class="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded-full font-mono">AI Agent Powered</span>
+          </div>
+          <p class="text-xs text-slate-400">Team Health, Blocker Triage & 1:1 Intelligence</p>
+        </div>
+      </div>
+
+      <!-- Tab Switcher (Manager vs Reportee) -->
+      <div class="flex bg-slate-900/90 p-1 rounded-xl border border-slate-700/80">
+        <button id="tab-mgr-btn" onclick="switchView('manager')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition bg-blue-600 text-white shadow">
+          <i class="fa-solid fa-user-tie"></i>
+          <span>1. Manager View</span>
+        </button>
+        <button id="tab-rep-btn" onclick="switchView('reportee')" class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white">
+          <i class="fa-solid fa-user-pen"></i>
+          <span>2. Team Member (Check-In)</span>
+        </button>
+      </div>
+
+      <!-- Active User Profile / Moma Sync Info -->
+      <div class="flex items-center gap-3">
+        <div class="text-right hidden sm:block">
+          <p id="nav-user-name" class="text-sm font-medium text-slate-200">Rashi Malviya</p>
+          <div class="flex items-center justify-end gap-1.5 text-xs text-emerald-400">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Moma TeamGraph Connected</span>
+          </div>
+        </div>
+        <img id="nav-user-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Rashi" alt="User" class="w-9 h-9 rounded-full border border-slate-600 bg-slate-700">
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 1: MANAGER DASHBOARD -->
+    <!-- ========================================================================= -->
+    <div id="view-manager" class="space-y-8">
+      
+      <!-- Top Metrics Banner -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-slate-800/60 border border-slate-700/60 p-5 rounded-2xl">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 text-sm font-medium">Direct Reports</span>
+            <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center">
+              <i class="fa-solid fa-users"></i>
+            </div>
+          </div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <span id="metric-total-team" class="text-2xl font-bold text-white">4</span>
+            <span class="text-xs text-slate-400">All active on Moma</span>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/60 border border-slate-700/60 p-5 rounded-2xl">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 text-sm font-medium">Active Blockers</span>
+            <div class="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-400 flex items-center justify-center">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+          </div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <span id="metric-blockers" class="text-2xl font-bold text-rose-400">2</span>
+            <span class="text-xs text-rose-400/80">Require Manager Support</span>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/60 border border-slate-700/60 p-5 rounded-2xl">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 text-sm font-medium">1:1 Discussions Requested</span>
+            <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center">
+              <i class="fa-solid fa-comments"></i>
+            </div>
+          </div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <span id="metric-1on1" class="text-2xl font-bold text-amber-400">2</span>
+            <span class="text-xs text-slate-400">Pending agendas</span>
+          </div>
+        </div>
+
+        <div class="bg-slate-800/60 border border-slate-700/60 p-5 rounded-2xl">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400 text-sm font-medium">Pending Doc Reviews</span>
+            <div class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
+              <i class="fa-solid fa-file-signature"></i>
+            </div>
+          </div>
+          <div class="mt-2 flex items-baseline gap-2">
+            <span id="metric-docs" class="text-2xl font-bold text-indigo-400">3</span>
+            <span class="text-xs text-slate-400">Design docs & PRDs</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main 2-Column Split: Team Roster Cards (Left) & AI Agent Copilot (Right) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left: Team Roster Cards (7 Cols) -->
+        <div class="lg:col-span-7 space-y-4">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h2 class="text-lg font-semibold text-white">Direct Reports Live Pulse</h2>
+              <p class="text-xs text-slate-400">Real-time status, blocker escalations, and sentiment</p>
+            </div>
+            <button onclick="refreshManagerData()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+              <i class="fa-solid fa-arrows-rotate"></i>
+              <span>Refresh</span>
+            </button>
+          </div>
+
+          <!-- Container for dynamically injected Reportee Cards -->
+          <div id="team-roster-list" class="space-y-4">
+            <!-- Loading state -->
+            <div class="p-8 text-center text-slate-500 bg-slate-800/40 rounded-2xl border border-slate-700/50">
+              <i class="fa-solid fa-spinner fa-spin text-2xl mb-2"></i>
+              <p class="text-sm">Loading team status from database...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: AI Manager Copilot (5 Cols) -->
+        <div class="lg:col-span-5 flex flex-col h-[700px] bg-slate-800/80 border border-slate-700 rounded-2xl overflow-hidden shadow-xl">
+          <!-- Copilot Header -->
+          <div class="p-4 bg-slate-800 border-b border-slate-700/80 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center border border-indigo-500/30">
+                <i class="fa-solid fa-robot"></i>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold text-white">AI Management Copilot</h3>
+                <p class="text-[11px] text-slate-400">Reasoning Agent with Live Tool Access</p>
+              </div>
+            </div>
+            <span class="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 px-2 py-0.5 rounded-full">Autonomous</span>
+          </div>
+
+          <!-- Quick Suggestion Chips -->
+          <div class="p-3 bg-slate-900/60 border-b border-slate-800 flex flex-wrap gap-1.5 text-xs">
+            <button onclick="askCopilot('Who is facing critical blockers right now?')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700 transition">
+              🚨 Who is blocked?
+            </button>
+            <button onclick="askCopilot('Prepare 1:1 talking points for Alex Chen')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700 transition">
+              📋 Prep Alex 1:1
+            </button>
+            <button onclick="askCopilot('Prepare 1:1 talking points for Rahul Sharma')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700 transition">
+              📋 Prep Rahul 1:1
+            </button>
+            <button onclick="askCopilot('Show upcoming leaves and docs needing review')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-full border border-slate-700 transition">
+              🏖️ Leaves & Docs
+            </button>
+          </div>
+
+          <!-- Chat Messages Container -->
+          <div id="copilot-chat-box" class="flex-1 p-4 overflow-y-auto space-y-4 text-sm bg-slate-900/40">
+            <!-- Welcome message -->
+            <div class="flex gap-3 items-start">
+              <div class="w-7 h-7 rounded-full bg-indigo-600 flex-shrink-0 flex items-center justify-center text-xs text-white">
+                <i class="fa-solid fa-sparkles"></i>
+              </div>
+              <div class="bg-slate-800 text-slate-200 p-3.5 rounded-2xl rounded-tl-sm border border-slate-700/80 leading-relaxed shadow-sm max-w-[88%]">
+                <p>Hello Rashi! I am your <strong>TeamPulse AI Copilot</strong>.</p>
+                <p class="mt-1 text-xs text-slate-400">I continuously analyze your direct reports' check-ins, detect blockers, prepare 1:1 meeting briefs, and highlight docs waiting on your review.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Input Box -->
+          <div class="p-3 bg-slate-800 border-t border-slate-700/80">
+            <form id="copilot-form" onsubmit="handleCopilotSubmit(event)" class="flex gap-2">
+              <input id="copilot-input" type="text" placeholder="Ask about blockers, 1:1s, team sentiment..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition" required />
+              <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 rounded-xl text-sm font-medium transition flex items-center justify-center shadow">
+                <i class="fa-solid fa-arrow-up"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- VIEW 2: REPORTEE / TEAM MEMBER CHECK-IN PORTAL -->
+    <!-- ========================================================================= -->
+    <div id="view-reportee" class="hidden max-w-3xl mx-auto space-y-6">
+      
+      <div class="bg-slate-800/80 border border-slate-700 rounded-3xl p-6 sm:p-8 shadow-2xl">
+        
+        <!-- Header -->
+        <div class="border-b border-slate-700 pb-6 mb-6">
+          <div class="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <span>📝 Submit Your Weekly Pulse & Status</span>
+              </h2>
+              <p class="text-sm text-slate-400 mt-1">Keep your manager updated on progress, blockers, and topics for your next 1:1.</p>
+            </div>
+            
+            <!-- User Selector to test as different team members -->
+            <div class="flex items-center gap-2 bg-slate-900/90 border border-slate-700 px-3 py-1.5 rounded-xl">
+              <label for="checkin-user-select" class="text-xs text-slate-400 font-medium">Submitting as:</label>
+              <select id="checkin-user-select" onchange="onUserSelectChange()" class="bg-transparent text-sm text-blue-400 font-semibold focus:outline-none cursor-pointer">
+                <option value="alex_chen" class="bg-slate-800 text-white">Alex Chen (Backend SWE)</option>
+                <option value="sarah_jenkins" class="bg-slate-800 text-white">Sarah Jenkins (Frontend SWE)</option>
+                <option value="rahul_sharma" class="bg-slate-800 text-white">Rahul Sharma (Infra SWE)</option>
+                <option value="maya_patel" class="bg-slate-800 text-white">Maya Patel (ML SWE)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Check-in Form -->
+        <form id="checkin-form" onsubmit="handleCheckinSubmit(event)" class="space-y-6">
+          
+          <!-- 1. Mood / Sentiment Picker -->
+          <div>
+            <label class="block text-sm font-semibold text-slate-200 mb-3">1. How are you feeling this week?</label>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <label class="cursor-pointer">
+                <input type="radio" name="mood" value="happy" class="peer sr-only" checked>
+                <div class="p-3.5 rounded-2xl border border-slate-700 bg-slate-900/50 peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 text-center transition">
+                  <span class="text-2xl block mb-1">😄</span>
+                  <span class="text-xs font-semibold text-slate-300 peer-checked:text-emerald-400">Happy & Flowing</span>
+                </div>
+              </label>
+
+              <label class="cursor-pointer">
+                <input type="radio" name="mood" value="neutral" class="peer sr-only">
+                <div class="p-3.5 rounded-2xl border border-slate-700 bg-slate-900/50 peer-checked:border-blue-500 peer-checked:bg-blue-500/10 text-center transition">
+                  <span class="text-2xl block mb-1">😐</span>
+                  <span class="text-xs font-semibold text-slate-300 peer-checked:text-blue-400">Steady / Cruising</span>
+                </div>
+              </label>
+
+              <label class="cursor-pointer">
+                <input type="radio" name="mood" value="blocked" class="peer sr-only">
+                <div class="p-3.5 rounded-2xl border border-slate-700 bg-slate-900/50 peer-checked:border-rose-500 peer-checked:bg-rose-500/10 text-center transition">
+                  <span class="text-2xl block mb-1">🛑</span>
+                  <span class="text-xs font-semibold text-slate-300 peer-checked:text-rose-400">Blocked / Stuck</span>
+                </div>
+              </label>
+
+              <label class="cursor-pointer">
+                <input type="radio" name="mood" value="overwhelmed" class="peer sr-only">
+                <div class="p-3.5 rounded-2xl border border-slate-700 bg-slate-900/50 peer-checked:border-amber-500 peer-checked:bg-amber-500/10 text-center transition">
+                  <span class="text-2xl block mb-1">⚡</span>
+                  <span class="text-xs font-semibold text-slate-300 peer-checked:text-amber-400">Overwhelmed</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- 2. Current Status / What you worked on -->
+          <div>
+            <label for="form-status" class="block text-sm font-semibold text-slate-200 mb-1.5">2. What are your main accomplishments & current focus?</label>
+            <textarea id="form-status" rows="3" placeholder="e.g., Completed the Spanner index migration, currently running integration tests..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition" required></textarea>
+          </div>
+
+          <!-- 3. Blockers Section with Toggle -->
+          <div class="p-4 bg-slate-900/60 border border-slate-700/80 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-triangle-exclamation text-rose-400"></i>
+                <span class="text-sm font-semibold text-slate-200">Are you blocked on anything?</span>
+              </div>
+              <input id="form-has-blocker" type="checkbox" onchange="toggleBlockerInput()" class="w-5 h-5 accent-rose-500 rounded cursor-pointer">
+            </div>
+
+            <div id="blocker-details-container" class="hidden pt-2">
+              <label for="form-blocker-details" class="block text-xs font-medium text-slate-300 mb-1">Describe the blocker & what manager support you need:</label>
+              <textarea id="form-blocker-details" rows="2" placeholder="e.g., Waiting on cross-team ACL review from SecOps (b/12345). Need help escalating." class="w-full bg-slate-900 border border-rose-500/40 rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-rose-500 transition"></textarea>
+            </div>
+          </div>
+
+          <!-- 4. 1:1 Discussion Request Section with Toggle -->
+          <div class="p-4 bg-slate-900/60 border border-slate-700/80 rounded-2xl space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <i class="fa-solid fa-comment-dots text-amber-400"></i>
+                <span class="text-sm font-semibold text-slate-200">Would you like to discuss anything in our next 1:1?</span>
+              </div>
+              <input id="form-wants-1on1" type="checkbox" onchange="toggle1on1Input()" class="w-5 h-5 accent-amber-500 rounded cursor-pointer">
+            </div>
+
+            <div id="one-on-one-details-container" class="hidden pt-2">
+              <label for="form-1on1-topics" class="block text-xs font-medium text-slate-300 mb-1">Topics or questions you'd like to cover:</label>
+              <textarea id="form-1on1-topics" rows="2" placeholder="e.g., Career growth trajectory, H2 project ownership, stress management..." class="w-full bg-slate-900 border border-amber-500/40 rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-500 transition"></textarea>
+            </div>
+          </div>
+
+          <!-- 5. Leave Plans & Doc Reviews -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="form-leave" class="block text-xs font-semibold text-slate-300 mb-1">🏖️ Upcoming Leave / OOO Plans:</label>
+              <input id="form-leave" type="text" placeholder="e.g. Taking Friday off for personal trip" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition">
+            </div>
+
+            <div>
+              <label for="form-docs" class="block text-xs font-semibold text-slate-300 mb-1">📄 Docs Needing Review (Links):</label>
+              <input id="form-docs" type="text" placeholder="e.g. https://docs.google.com/... (Design doc)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition">
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="pt-4 flex items-center justify-between">
+            <p id="checkin-toast" class="text-sm font-medium text-emerald-400 hidden flex items-center gap-1.5">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Saved! Your manager will see your latest update.</span>
+            </p>
+            <button type="submit" class="ml-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-blue-500/25 transition flex items-center gap-2">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Submit Check-In</span>
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Frontend JavaScript Logic -->
+  <script>
+    const API_BASE = window.location.origin;
+    let currentManager = "malviyarashi";
+
+    // Switch between Manager and Reportee Views
+    function switchView(viewName) {
+      const mgrView = document.getElementById("view-manager");
+      const repView = document.getElementById("view-reportee");
+      const mgrBtn = document.getElementById("tab-mgr-btn");
+      const repBtn = document.getElementById("tab-rep-btn");
+
+      if (viewName === "manager") {
+        mgrView.classList.remove("hidden");
+        repView.classList.add("hidden");
+        mgrBtn.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition bg-blue-600 text-white shadow";
+        repBtn.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white";
+        refreshManagerData();
+      } else {
+        mgrView.classList.add("hidden");
+        repView.classList.remove("hidden");
+        repBtn.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition bg-blue-600 text-white shadow";
+        mgrBtn.className = "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition text-slate-400 hover:text-white";
+      }
+    }
+
+    function toggleBlockerInput() {
+      const isChecked = document.getElementById("form-has-blocker").checked;
+      const container = document.getElementById("blocker-details-container");
+      if (isChecked) container.classList.remove("hidden");
+      else container.classList.add("hidden");
+    }
+
+    function toggle1on1Input() {
+      const isChecked = document.getElementById("form-wants-1on1").checked;
+      const container = document.getElementById("one-on-one-details-container");
+      if (isChecked) container.classList.remove("hidden");
+      else container.classList.add("hidden");
+    }
+
+    // Fetch and render Manager Dashboard data
+    async function refreshManagerData() {
+      try {
+        const res = await fetch(`${API_BASE}/api/manager/${currentManager}/overview`);
+        const data = await res.json();
+        const team = data.team || [];
+
+        // Update top metrics
+        document.getElementById("metric-total-team").textContent = team.length;
+        const blockerCount = team.filter(m => m.has_blocker).length;
+        const oneOnOneCount = team.filter(m => m.wants_1on1).length;
+        const docsCount = team.filter(m => m.doc_links && m.doc_links.length > 0).length;
+
+        document.getElementById("metric-blockers").textContent = blockerCount;
+        document.getElementById("metric-1on1").textContent = oneOnOneCount;
+        document.getElementById("metric-docs").textContent = docsCount;
+
+        // Render Roster Cards
+        const container = document.getElementById("team-roster-list");
+        if (team.length === 0) {
+          container.innerHTML = `<div class="p-8 text-center text-slate-500">No reportees found for manager.</div>`;
+          return;
+        }
+
+        container.innerHTML = team.map(member => {
+          const moodBadge = getMoodBadge(member.mood);
+          const hasBlocker = member.has_blocker;
+          const wants1on1 = member.wants_1on1;
+
+          return `
+            <div class="bg-slate-800/70 border ${hasBlocker ? 'border-rose-500/50 bg-rose-950/10' : 'border-slate-700'} p-5 rounded-2xl space-y-3 transition hover:border-slate-600">
+              
+              <!-- Card Header -->
+              <div class="flex items-start justify-between">
+                <div class="flex items-center gap-3">
+                  <img src="${member.avatar_url || 'https://api.dicebear.com/7.x/bottts/svg?seed=' + member.ldap}" class="w-10 h-10 rounded-full bg-slate-700 border border-slate-600">
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h4 class="font-semibold text-white text-base">${member.name}</h4>
+                      <span class="text-xs text-slate-400 font-mono">(${member.ldap})</span>
+                    </div>
+                    <p class="text-xs text-slate-400">${member.title}</p>
+                  </div>
+                </div>
+                <div>${moodBadge}</div>
+              </div>
+
+              <!-- Status Focus -->
+              <div class="text-sm text-slate-300 bg-slate-900/60 p-3 rounded-xl border border-slate-800 leading-relaxed">
+                <span class="text-xs text-slate-400 font-semibold block mb-0.5">CURRENT FOCUS:</span>
+                ${member.status_summary || '<span class="italic text-slate-500">No update submitted yet</span>'}
+              </div>
+
+              <!-- Blocker Alert if active -->
+              ${hasBlocker ? `
+                <div class="bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl text-xs space-y-1">
+                  <div class="flex items-center gap-1.5 text-rose-400 font-bold">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>ACTIVE BLOCKER FLAGGED</span>
+                  </div>
+                  <p class="text-rose-200 leading-relaxed">${member.blocker_details || 'Help requested'}</p>
+                </div>
+              ` : ''}
+
+              <!-- 1:1 Request Alert if active -->
+              ${wants1on1 ? `
+                <div class="bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl text-xs space-y-1">
+                  <div class="flex items-center justify-between">
+                    <span class="text-amber-400 font-bold flex items-center gap-1.5">
+                      <i class="fa-solid fa-comments"></i> 1:1 DISCUSSION REQUESTED
+                    </span>
+                    <button onclick="askCopilot('Prepare 1:1 talking points for ${member.name}')" class="text-[11px] bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 px-2 py-0.5 rounded font-medium transition">
+                      Generate Agenda ✨
+                    </button>
+                  </div>
+                  <p class="text-amber-200/90 italic">"${member.one_on_one_topics || 'General check-in'}"</p>
+                </div>
+              ` : ''}
+
+              <!-- Footer with Leaves & Docs -->
+              <div class="pt-1 flex flex-wrap gap-2 text-xs">
+                ${member.leave_info ? `
+                  <span class="bg-slate-700/60 text-slate-300 px-2.5 py-1 rounded-lg border border-slate-600 flex items-center gap-1">
+                    <i class="fa-solid fa-umbrella-beach text-sky-400"></i> ${member.leave_info}
+                  </span>
+                ` : ''}
+
+                ${member.doc_links ? `
+                  <span class="bg-indigo-500/10 text-indigo-300 px-2.5 py-1 rounded-lg border border-indigo-500/30 flex items-center gap-1">
+                    <i class="fa-solid fa-file-lines"></i> ${member.doc_links}
+                  </span>
+                ` : ''}
+              </div>
+
+            </div>
+          `;
+        }).join('');
+
+      } catch (err) {
+        console.error("Failed to load manager overview:", err);
+      }
+    }
+
+    function getMoodBadge(mood) {
+      if (mood === 'happy') {
+        return `<span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1">😄 Happy</span>`;
+      } else if (mood === 'blocked') {
+        return `<span class="bg-rose-500/10 text-rose-400 border border-rose-500/30 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1">🛑 Blocked</span>`;
+      } else if (mood === 'overwhelmed') {
+        return `<span class="bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1">⚡ Overwhelmed</span>`;
+      }
+      return `<span class="bg-blue-500/10 text-blue-400 border border-blue-500/30 px-2.5 py-1 rounded-full text-xs font-semibold flex items-center gap-1">😐 Steady</span>`;
+    }
+
+    // AI Copilot Query submission
+    async function handleCopilotSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById("copilot-input");
+      const query = input.value.trim();
+      if (!query) return;
+
+      appendChatMessage("You", query, true);
+      input.value = "";
+
+      // Show temporary typing loader
+      const loaderId = appendChatLoader();
+
+      try {
+        const res = await fetch(`${API_BASE}/api/agent/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ manager_ldap: currentManager, message: query })
+        });
+        const data = await res.json();
+        removeChatLoader(loaderId);
+        appendChatMessage("AI Copilot", data.reply, false, data.tools_called);
+      } catch (err) {
+        removeChatLoader(loaderId);
+        appendChatMessage("AI Copilot", "Error connecting to AI Agent engine.", false);
+      }
+    }
+
+    function askCopilot(query) {
+      document.getElementById("copilot-input").value = query;
+      document.getElementById("copilot-form").dispatchEvent(new Event('submit'));
+    }
+
+    function appendChatMessage(sender, text, isUser, toolsCalled = []) {
+      const box = document.getElementById("copilot-chat-box");
+      const wrapper = document.createElement("div");
+      wrapper.className = "flex gap-3 items-start " + (isUser ? "flex-row-reverse" : "");
+
+      const avatar = isUser ? `
+        <div class="w-7 h-7 rounded-full bg-blue-600 flex-shrink-0 flex items-center justify-center text-xs text-white">
+          <i class="fa-solid fa-user"></i>
+        </div>
+      ` : `
+        <div class="w-7 h-7 rounded-full bg-indigo-600 flex-shrink-0 flex items-center justify-center text-xs text-white">
+          <i class="fa-solid fa-sparkles"></i>
+        </div>
+      `;
+
+      let toolsBadge = "";
+      if (toolsCalled && toolsCalled.length > 0) {
+        const toolNames = toolsCalled.map(t => t.tool).join(", ");
+        toolsBadge = `
+          <div class="mb-2 text-[10px] text-indigo-300 bg-indigo-950/60 border border-indigo-500/30 px-2 py-0.5 rounded inline-flex items-center gap-1">
+            <i class="fa-solid fa-bolt text-indigo-400"></i> Tool executed: <code>${toolNames}</code>
+          </div>
+        `;
+      }
+
+      const formattedText = text.replace(/\n/g, "<br/>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+
+      wrapper.innerHTML = `
+        ${avatar}
+        <div class="${isUser ? 'bg-blue-600 text-white rounded-2xl rounded-tr-sm' : 'bg-slate-800 text-slate-200 rounded-2xl rounded-tl-sm border border-slate-700/80'} p-3.5 text-xs sm:text-sm leading-relaxed shadow-sm max-w-[85%]">
+          ${toolsBadge}
+          <div>${formattedText}</div>
+        </div>
+      `;
+
+      box.appendChild(wrapper);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function appendChatLoader() {
+      const box = document.getElementById("copilot-chat-box");
+      const loader = document.createElement("div");
+      const id = "loader-" + Date.now();
+      loader.id = id;
+      loader.className = "flex gap-3 items-start";
+      loader.innerHTML = `
+        <div class="w-7 h-7 rounded-full bg-indigo-600 flex-shrink-0 flex items-center justify-center text-xs text-white">
+          <i class="fa-solid fa-sparkles"></i>
+        </div>
+        <div class="bg-slate-800 text-slate-400 p-3 rounded-2xl text-xs flex items-center gap-2 border border-slate-700">
+          <i class="fa-solid fa-spinner fa-spin text-indigo-400"></i>
+          <span>Agent is reasoning & querying database tools...</span>
+        </div>
+      `;
+      box.appendChild(loader);
+      box.scrollTop = box.scrollHeight;
+      return id;
+    }
+
+    function removeChatLoader(id) {
+      const elem = document.getElementById(id);
+      if (elem) elem.remove();
+    }
+
+    // Handle Reportee Check-In Form Submission
+    async function handleCheckinSubmit(e) {
+      e.preventDefault();
+      const userLdap = document.getElementById("checkin-user-select").value;
+      const mood = document.querySelector('input[name="mood"]:checked').value;
+      const statusSummary = document.getElementById("form-status").value.trim();
+      const hasBlocker = document.getElementById("form-has-blocker").checked;
+      const blockerDetails = document.getElementById("form-blocker-details").value.trim();
+      const wants1on1 = document.getElementById("form-wants-1on1").checked;
+      const oneOnOneTopics = document.getElementById("form-1on1-topics").value.trim();
+      const leaveInfo = document.getElementById("form-leave").value.trim();
+      const docLinks = document.getElementById("form-docs").value.trim();
+
+      const payload = {
+        user_ldap: userLdap,
+        mood: mood,
+        status_summary: statusSummary,
+        has_blocker: hasBlocker,
+        blocker_details: blockerDetails,
+        wants_1on1: wants1on1,
+        one_on_one_topics: oneOnOneTopics,
+        leave_info: leaveInfo,
+        doc_links: docLinks
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/api/checkin`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        
+        // Show success toast
+        const toast = document.getElementById("checkin-toast");
+        toast.classList.remove("hidden");
+        setTimeout(() => toast.classList.add("hidden"), 4000);
+
+      } catch (err) {
+        alert("Failed to submit check-in. Please ensure backend server is running.");
+      }
+    }
+
+    function onUserSelectChange() {
+      // Clear form inputs for the freshly selected member
+      document.getElementById("form-status").value = "";
+      document.getElementById("form-has-blocker").checked = false;
+      document.getElementById("form-blocker-details").value = "";
+      document.getElementById("form-wants-1on1").checked = false;
+      document.getElementById("form-1on1-topics").value = "";
+      document.getElementById("form-leave").value = "";
+      document.getElementById("form-docs").value = "";
+      toggleBlockerInput();
+      toggle1on1Input();
+    }
+
+    // Initial Load
+    window.addEventListener("DOMContentLoaded", () => {
+      refreshManagerData();
+    });
+  </script>
+</body>
+</html>
